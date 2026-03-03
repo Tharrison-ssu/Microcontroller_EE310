@@ -1,0 +1,33 @@
+;Will update with proper header here
+
+        movlw   0x00
+        movwf   TRISC ;Enable Port C
+
+        movlw   0b10000110
+        movwf   PORTC  ;Display 1
+
+        movlw   0b11011011
+        movwf   PORTC  ;Display 2
+
+        movlw   0b11001111
+        movwf   PORTC  ;Display 3
+
+        movlw   0b11100110
+        movwf   PORTC  ;Display 4
+
+        movlw   0b11101101
+        movwf   PORTC  ;Display 5
+
+        movlw   0b11111100
+        movwf   PORTC  ;Display 6
+
+        movlw   0b10000111
+        movwf   PORTC  ;Display 7
+
+        movlw   0b11111111
+        movwf   PORTC  ;Display 8
+
+        movlw   0b11100111
+        movwf   PORTC  ;Display 9
+
+        sleep
