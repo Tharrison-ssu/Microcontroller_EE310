@@ -1,0 +1,148 @@
+        PROCESSOR   18F46K42
+        #include    <xc.inc>
+        #include    "MyConfigFile.inc"
+
+refTemp             EQU     0x20
+measuredTemp        EQU     0x21
+contReg             EQU     0x22
+
+tempValue           EQU     0x23
+tensPlaceTemp       EQU     0x24
+
+REF_ONES            EQU     0x60
+REF_TENS            EQU     0x61
+REF_HUNDS           EQU     0x62
+
+MEAS_ONES           EQU     0x70
+MEAS_TENS           EQU     0x71
+MEAS_HUNDS          EQU     0x72
+
+
+;============================================================
+; RESET VECTOR (your working method)
+;============================================================
+        PSECT   absdata,abs,ovrld        ; Do not change
+        ORG     0x0000
+
+__reset:
+        GOTO    ProgramStart
+
+
+
+; MAIN PROGRAM 
+
+        ORG     0x0020
+
+ProgramStart:
+
+        MOVLW   15
+        MOVWF   refTemp, a
+
+        MOVLW   0xFB
+        MOVWF   measuredTemp, a
+
+        CLRF    LATD, a
+        CLRF    TRISD, a
+
+
+        MOVF    refTemp, W, a
+        SUBWF   measuredTemp, W, a
+
+        BTFSC   STATUS, 2, a
+        GOTO    TemperaturesEqual
+
+        BTFSS   STATUS, 4, a
+        GOTO    NegativeFlagClear
+
+NegativeFlagSet:
+        BTFSS   STATUS, 3, a
+        GOTO    MeasuredBelowReference
+        GOTO    MeasuredAboveReference
+
+NegativeFlagClear:
+        BTFSC   STATUS, 3, a
+        GOTO    MeasuredBelowReference
+        GOTO    MeasuredAboveReference
+
+
+TemperaturesEqual:
+        CLRF    contReg, a
+        BCF     LATD, 1, a
+        BCF     LATD, 2, a
+        GOTO    ConvertTemperaturesToDigits
+
+MeasuredBelowReference:
+        MOVLW   0x01
+        MOVWF   contReg, a
+        BSF     LATD, 1, a
+        BCF     LATD, 2, a
+        GOTO    ConvertTemperaturesToDigits
+
+MeasuredAboveReference:
+        MOVLW   0x02
+        MOVWF   contReg, a
+        BCF     LATD, 1, a
+        BSF     LATD, 2, a
+
+
+
+ConvertTemperaturesToDigits:
+
+        MOVF    refTemp, W, a
+        MOVWF   tempValue, a
+        CALL    ConvertToAbsoluteDecimal
+
+        MOVF    tempValue, W, a
+        MOVWF   REF_ONES, b
+
+        MOVF    tensPlaceTemp, W, a
+        MOVWF   REF_TENS, b
+
+        CLRF    REF_HUNDS, b
+
+        MOVF    measuredTemp, W, a
+        MOVWF   tempValue, a
+        CALL    ConvertToAbsoluteDecimal
+
+        MOVF    tempValue, W, a
+        MOVWF   MEAS_ONES, b
+
+        MOVF    tensPlaceTemp, W, a
+        MOVWF   MEAS_TENS, b
+
+        CLRF    MEAS_HUNDS, b
+
+
+ForeverLoop:
+        GOTO    ForeverLoop
+
+
+
+ConvertToAbsoluteDecimal:
+
+        BTFSS   tempValue, 7, a
+        GOTO    AbsoluteReady
+        COMF    tempValue, F, a
+        INCF    tempValue, F, a
+
+AbsoluteReady:
+        CLRF    tensPlaceTemp, a
+
+FindTensLoop:
+        MOVLW   10
+        SUBWF   tempValue, F, a
+
+        BTFSS   STATUS, 0, a
+        GOTO    TensCalculationComplete
+
+        INCF    tensPlaceTemp, F, a
+        GOTO    FindTensLoop
+
+TensCalculationComplete:
+        BTFSC   STATUS, 0, a
+        RETURN
+        MOVLW   10
+        ADDWF   tempValue, F, a
+        RETURN
+
+        END
