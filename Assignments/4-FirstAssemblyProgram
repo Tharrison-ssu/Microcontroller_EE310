@@ -1,4 +1,52 @@
-        PROCESSOR   18F46K42
+;============================================================
+; Title:      Signed Temperature Compare and Decimal Display
+; 
+; Author:     Taine Harrison
+; Date:       March 11, 2026
+;
+; Program:    FirstAssemblyProgramMain.asm
+; Device:     PIC18F46K42
+; Compiler:   MPLAB X IDE with XC8 (pic-as assembler)
+;
+; Purpose:
+;   This program compares two signed 8-bit temperature values:
+;   - refTemp (reference temperature)
+;   - measuredTemp (measured temperature)
+;
+;   It determines whether the measured temperature is:
+;       Equal to reference
+;       Below reference
+;       Above reference
+;
+;   The result is stored in contReg and indicated using the bits of LATD:
+;       RD1 = Below reference
+;       RD2 = Above reference
+;       Both clear = Equal
+;
+;   Both temperature values are converted to their absolute
+;   decimal representation (tens and ones digits) and stored in:
+;       Reference: 0x60–0x62
+;       Measured:  0x70–0x72
+;
+; Inputs:
+;   refTemp        (0x20) – Signed 8-bit reference temperature
+;   measuredTemp   (0x21) – Signed 8-bit measured temperature
+;
+; Outputs:
+;   contReg        (0x22) – Comparison result
+;   LATD<1:2>      – Status indicators
+;   REF_ONES/TENS/HUNDS   – Reference decimal digits
+;   MEAS_ONES/TENS/HUNDS  – Measured decimal digits
+;
+; Dependencies:
+;   xc.inc
+;   MyConfigFile.inc
+;
+; Revision History:
+;   v1.0 – Working code
+;   v1.1 - Added header
+;============================================================
+	PROCESSOR   18F46K42
         #include    <xc.inc>
         #include    "MyConfigFile.inc"
 
