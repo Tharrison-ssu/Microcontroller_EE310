@@ -45,6 +45,7 @@
 ; Revision History:
 ;   v1.0 – Working code
 ;   v1.1 - Added header
+;   v1.2 - Added comments for each section
 ;============================================================
 	PROCESSOR   18F46K42
         #include    <xc.inc>
@@ -84,13 +85,13 @@ __reset:
 ProgramStart:
 
         MOVLW   15
-        MOVWF   refTemp, a
+        MOVWF   refTemp, a  ;Sets reference temperature in register 0x20
 
         MOVLW   0xFB
-        MOVWF   measuredTemp, a
+        MOVWF   measuredTemp, a  ;Sets measured temperature in register 0x20
 
         CLRF    LATD, a
-        CLRF    TRISD, a
+        CLRF    TRISD, a   ;Sets latd and portd to outputs
 
 
         MOVF    refTemp, W, a
@@ -102,16 +103,31 @@ ProgramStart:
         BTFSS   STATUS, 4, a
         GOTO    NegativeFlagClear
 
+;-----------------------------
+; Case: N == 1 (result sign negative)
+; If OV==0, negative is "real" -> measured < ref
+; If OV==1, sign is flipped by overflow -> measured > ref
+;-----------------------------
+
 NegativeFlagSet:
         BTFSS   STATUS, 3, a
         GOTO    MeasuredBelowReference
         GOTO    MeasuredAboveReference
+
+;-----------------------------
+; Case: N == 0 (result sign positive)
+; If OV==0, positive is "real" -> measured > ref
+; If OV==1, sign is flipped by overflow -> measured < ref
+;-----------------------------
 
 NegativeFlagClear:
         BTFSC   STATUS, 3, a
         GOTO    MeasuredBelowReference
         GOTO    MeasuredAboveReference
 
+;============================================================
+; Takes comparision results and stores in latd
+;============================================================
 
 TemperaturesEqual:
         CLRF    contReg, a
@@ -132,7 +148,14 @@ MeasuredAboveReference:
         BCF     LATD, 1, a
         BSF     LATD, 2, a
 
-
+;============================================================
+; Decimal Conversion
+; Converts each signed temperature to absolute value
+; and splits into tens and ones.
+; After ConvertToAbsoluteDecimal:
+; tempValue = ones digit (0-9)
+; tensPlaceTemp = tens digit
+;============================================================
 
 ConvertTemperaturesToDigits:
 
@@ -160,11 +183,16 @@ ConvertTemperaturesToDigits:
 
         CLRF    MEAS_HUNDS, b
 
+;============================================================
+; Infinite loop so program doesn't run into empty memory
+;============================================================
 
 ForeverLoop:
         GOTO    ForeverLoop
 
-
+;============================================================
+; Functions below
+;============================================================
 
 ConvertToAbsoluteDecimal:
 
