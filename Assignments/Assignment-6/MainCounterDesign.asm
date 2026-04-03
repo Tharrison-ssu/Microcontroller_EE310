@@ -25,7 +25,6 @@
 ;------------------------------------------------------------
 ; Program Features:
 ; Uses CALL instruction to implement delay between counts
-; Uses indirect addressing for 7-segment lookup
 ;================================================================
 ;------------------------------------------------------------
 ; Wiring Connections
